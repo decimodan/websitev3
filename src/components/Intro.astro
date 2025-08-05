@@ -1,0 +1,232 @@
+---
+const introData = {
+  title: "I'm Daniel Guerrero",
+  description: "Squad Leader con más de 10 años de experiencia diseñando, manteniendo e implementando sistemas de alta disponibilidad y escalabilidad, creando experencias tecnológicas centradas en el cliente.",
+  photo: "/yo.webp"
+};
+---
+
+<section class="bg-blue-100 dark:bg-gray-900 relative">
+  <!-- Animación de flujo de datos en tiempo real -->
+  <div class="dataflow-container opacity-70 dark:opacity-60 pointer-events-none">
+    <!-- Nodos de datos -->
+    <div class="data-node node-1"></div>
+    <div class="data-node node-2"></div>
+    <div class="data-node node-3"></div>
+    <div class="data-node node-4"></div>
+    <div class="data-node node-5"></div>
+    <div class="data-node node-6"></div>
+    
+    <!-- Líneas de conexión -->
+    <div class="data-line line-1"></div>
+    <div class="data-line line-2"></div>
+    <div class="data-line line-3"></div>
+    <div class="data-line line-4"></div>
+    <div class="data-line line-5"></div>
+    <div class="data-line line-6"></div>
+    
+    <!-- Paquetes de datos -->
+    <div class="data-packet packet-1"></div>
+    <div class="data-packet packet-2"></div>
+    <div class="data-packet packet-3"></div>
+    <div class="data-packet packet-4"></div>
+    <div class="data-packet packet-5"></div>
+    <div class="data-packet packet-6"></div>
+    <div class="data-packet packet-7"></div>
+    <div class="data-packet packet-8"></div>
+  </div>
+  
+  <!-- Patrón de puntos de fondo -->
+  <div class="dots-pattern opacity-20 dark:opacity-15"></div>
+  
+  <div class="container max-w-screen-lg mx-auto px-6 py-12 grid md:grid-cols-2 gap-8 lg:gap-16 items-center relative z-10">
+    <div class="text-left">
+      <h1 class="text-4xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-white">{introData.title}</h1>
+      <p class="text-lg md:text-xl text-gray-700 dark:text-gray-300 leading-relaxed">{introData.description}</p>
+    </div>
+    <div class="flex justify-center md:justify-end">
+      <!-- Imagen principal -->
+      <img 
+        class="w-48 h-60 md:w-56 md:h-72 rounded-lg shadow-lg object-cover" 
+        src={introData.photo} 
+        alt="Daniel Guerrero" 
+      />
+    </div>
+  </div>
+</section>
+
+<style>
+  .dataflow-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .data-node {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 1) 0%, rgba(139, 92, 246, 0.8) 70%, transparent 100%);
+    border-radius: 50%;
+    animation: nodePulse 3s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+  }
+
+  .data-line {
+    position: absolute;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), transparent);
+    animation: dataFlow 4s linear infinite;
+  }
+
+  .data-packet {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: radial-gradient(circle, rgba(34, 197, 94, 1) 0%, rgba(16, 185, 129, 0.8) 70%, transparent 100%);
+    border-radius: 50%;
+    animation: packetMove 6s linear infinite;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.8);
+  }
+
+
+
+  /* Nodos de datos */
+  .node-1 { top: 20%; left: 20%; animation-delay: 0s; }
+  .node-2 { top: 30%; right: 25%; animation-delay: 0.5s; }
+  .node-3 { top: 60%; left: 30%; animation-delay: 1s; }
+  .node-4 { top: 70%; right: 20%; animation-delay: 1.5s; }
+  .node-5 { top: 45%; left: 50%; animation-delay: 2s; }
+  .node-6 { top: 15%; left: 70%; animation-delay: 2.5s; }
+
+  /* Líneas de conexión */
+  .line-1 { 
+    top: 25%; left: 25%; width: 200px; transform: rotate(15deg); 
+    animation-delay: 0s; 
+  }
+  .line-2 { 
+    top: 35%; left: 45%; width: 180px; transform: rotate(-20deg); 
+    animation-delay: 1s; 
+  }
+  .line-3 { 
+    top: 55%; left: 35%; width: 220px; transform: rotate(25deg); 
+    animation-delay: 2s; 
+  }
+  .line-4 { 
+    top: 65%; left: 55%; width: 160px; transform: rotate(-15deg); 
+    animation-delay: 3s; 
+  }
+  .line-5 { 
+    top: 40%; left: 60%; width: 190px; transform: rotate(30deg); 
+    animation-delay: 0.5s; 
+  }
+  .line-6 { 
+    top: 20%; left: 65%; width: 170px; transform: rotate(-25deg); 
+    animation-delay: 1.5s; 
+  }
+
+  /* Paquetes de datos */
+  .packet-1 { top: 22%; left: 22%; animation-delay: 0s; }
+  .packet-2 { top: 32%; right: 27%; animation-delay: 1s; }
+  .packet-3 { top: 62%; left: 32%; animation-delay: 2s; }
+  .packet-4 { top: 72%; right: 22%; animation-delay: 3s; }
+  .packet-5 { top: 47%; left: 52%; animation-delay: 0.5s; }
+  .packet-6 { top: 17%; left: 72%; animation-delay: 1.5s; }
+  .packet-7 { top: 42%; left: 35%; animation-delay: 2.5s; }
+  .packet-8 { top: 67%; left: 45%; animation-delay: 3.5s; }
+
+  .dots-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0);
+    background-size: 20px 20px;
+    animation: dotsMove 35s linear infinite;
+  }
+
+  @keyframes nodePulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.8;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+    }
+    50% {
+      transform: scale(1.3);
+      opacity: 1;
+      box-shadow: 0 0 30px rgba(59, 130, 246, 1);
+    }
+  }
+
+  @keyframes dataFlow {
+    0% {
+      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);
+      transform: translateX(-100%);
+    }
+    50% {
+      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.8), transparent);
+      transform: translateX(0%);
+    }
+    100% {
+      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes packetMove {
+    0% {
+      transform: translateX(0px) translateY(0px);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(200px) translateY(-50px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes dotsMove {
+    0% {
+      transform: translateX(0) translateY(0);
+    }
+    100% {
+      transform: translateX(-20px) translateY(-20px);
+    }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .dataflow-container {
+      opacity: 0.4;
+    }
+    
+    .data-node {
+      width: 8px;
+      height: 8px;
+    }
+    
+    .data-packet {
+      width: 4px;
+      height: 4px;
+    }
+    
+    .data-line {
+      height: 1px;
+    }
+    
+    .dots-pattern {
+      background-size: 15px 15px;
+    }
+  }
+</style> 
