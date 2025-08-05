@@ -1,0 +1,126 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogCard from '../../components/BlogCard.astro';
+
+// Cargar todos los skills del directorio de contenido
+const skillFiles = await Astro.glob('../../content/skills/*.md');
+
+// Cargar todos los posts del directorio de contenido
+const postFiles = await Astro.glob('../../content/blog/**/*.md');
+
+// Obtener el slug del skill de la URL
+const skillSlug = Astro.params.slug;
+
+// Buscar el skill correspondiente
+const skill = skillFiles.find(s => s.frontmatter?.slug === skillSlug);
+
+// Si no se encuentra el skill, redirigir a 404
+if (!skill) {
+  return Astro.redirect('/404');
+}
+
+// Filtrar posts que tengan el skill en sus tags o categorías
+const relatedPosts = postFiles.filter(post => {
+  const postTags = post.frontmatter?.tags || [];
+  const postCategories = post.frontmatter?.categories || [];
+  const skillTitle = skill.frontmatter?.title?.toLowerCase();
+  const skillTags = skill.frontmatter?.tags || [];
+  
+  return postTags.some(tag => 
+    skillTags.includes(tag) || 
+    tag.toLowerCase().includes(skillTitle) ||
+    skillTitle.includes(tag.toLowerCase())
+  ) || postCategories.some(category => 
+    category.toLowerCase().includes(skillTitle) ||
+    skillTitle.includes(category.toLowerCase())
+  );
+});
+
+// Transformar los posts relacionados a la estructura esperada
+const posts = await Promise.all(
+  relatedPosts.map(async (post) => {
+    try {
+      // Extraer el slug de la ruta del archivo
+      const pathParts = post.file.split('/');
+      
+      let year, filename, slug;
+      
+      // Verificar si el archivo está en un subdirectorio por año o en el directorio raíz
+      if (pathParts.length >= 4 && /^\d{4}$/.test(pathParts[pathParts.length - 2])) {
+        // Archivo en subdirectorio por año (ej: src/content/blog/2019/post.md)
+        year = pathParts[pathParts.length - 2];
+        filename = pathParts[pathParts.length - 1].split('.')[0];
+        slug = `${year}-${filename}`;
+      } else {
+        // Archivo en el directorio raíz (ej: src/content/blog/post.md)
+        // Intentar extraer el año del frontmatter o usar un año por defecto
+        const pubDate = post.frontmatter?.pubDate ? new Date(post.frontmatter.pubDate) : new Date();
+        year = pubDate.getFullYear().toString();
+        filename = pathParts[pathParts.length - 1].split('.')[0];
+        slug = `${year}-${filename}`;
+      }
+      
+      return {
+        slug,
+        data: {
+          title: post.frontmatter?.title || 'Sin título',
+          description: post.frontmatter?.description || post.frontmatter?.summary || 'Sin descripción',
+          thumbnail: post.frontmatter?.thumbnail || post.frontmatter?.image || '/blog-placeholder-1.jpg',
+          pubDate: post.frontmatter?.pubDate ? new Date(post.frontmatter.pubDate) : new Date()
+        }
+      };
+    } catch (error) {
+      console.error(`Error processing post: ${post.file}`, error);
+      return null;
+    }
+  })
+);
+
+// Filtrar posts nulos y ordenar por fecha
+const validPosts = posts.filter(Boolean);
+const sortedPosts = validPosts.sort((a, b) => 
+  b.data.pubDate.getTime() - a.data.pubDate.getTime()
+);
+---
+
+<BaseLayout 
+  title={`Posts sobre ${skill.frontmatter.title}`}
+  description={`Artículos relacionados con ${skill.frontmatter.title}`}
+>
+  <div class="container mx-auto px-6 py-8">
+    <div class="text-center mb-8">
+      <div class="flex justify-center mb-4">
+        <div class="w-24 h-24 rounded-lg shadow-sm bg-gray-800 dark:bg-gray-900 overflow-hidden border border-gray-700 dark:border-gray-600">
+          <img 
+            src={skill.frontmatter.image || skill.frontmatter.thumbnail} 
+            alt={skill.frontmatter.title}
+            class="w-full h-full object-cover"
+          />
+        </div>
+      </div>
+      <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        Posts sobre {skill.frontmatter.title}
+      </h1>
+      <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+        {skill.frontmatter.description}
+      </p>
+    </div>
+
+    {sortedPosts.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {sortedPosts.map(post => (
+          <BlogCard post={post} />
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-12">
+        <p class="text-lg text-gray-600 dark:text-gray-400">
+          No hay posts relacionados con {skill.frontmatter.title} aún.
+        </p>
+        <a href="/blog" class="inline-block mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          Ver todos los posts
+        </a>
+      </div>
+    )}
+  </div>
+</BaseLayout> 

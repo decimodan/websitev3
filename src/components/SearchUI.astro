@@ -1,0 +1,193 @@
+---
+// This component will be included in the Header
+---
+
+<div class="search-ui hidden fixed inset-0 z-50 bg-black bg-opacity-50">
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+      <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <input 
+          type="text" 
+          placeholder="Buscar posts..." 
+          class="flex-1 bg-transparent border-none outline-none text-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+        />
+        <button class="close-search ml-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="search-results hidden p-4">
+        <ul class="search-list space-y-2"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let fuse;
+  let searchVisible = false;
+  
+  // Initialize search functionality
+  async function initSearch() {
+    try {
+      console.log('Initializing search...');
+      
+      // Get all blog posts for search
+      const response = await fetch('/api/search-posts');
+      console.log('Search API response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const posts = await response.json();
+      console.log('Posts received:', posts.length);
+      
+      // Dynamically import Fuse.js
+      const Fuse = (await import('fuse.js')).default;
+      console.log('Fuse.js imported successfully');
+      
+      // Configure Fuse.js
+      const options = {
+        keys: ['title', 'description', 'content'],
+        threshold: 0.4,
+        includeScore: true,
+        minMatchCharLength: 2
+      };
+      
+      fuse = new Fuse(posts, options);
+      console.log('Search initialized with', posts.length, 'posts');
+      
+      // Show success message
+      const searchInput = document.querySelector('.search-ui input');
+      if (searchInput) {
+        searchInput.placeholder = 'Buscar posts... (listo)';
+      }
+    } catch (error) {
+      console.error('Failed to initialize search:', error);
+      // Show error message to user
+      const searchInput = document.querySelector('.search-ui input');
+      if (searchInput) {
+        searchInput.placeholder = 'Error al cargar búsqueda...';
+      }
+    }
+  }
+  
+  // Toggle search visibility
+  function toggleSearch() {
+    const searchUI = document.querySelector('.search-ui');
+    const searchInput = document.querySelector('.search-ui input');
+    
+    if (searchVisible) {
+      searchUI.classList.add('hidden');
+      searchVisible = false;
+      // Clear search when closing
+      searchInput.value = '';
+      hideResults();
+    } else {
+      searchUI.classList.remove('hidden');
+      searchInput.focus();
+      searchVisible = true;
+    }
+  }
+  
+  // Perform search
+  function performSearch(query) {
+    console.log('Performing search for:', query);
+    
+    if (!fuse || !query.trim()) {
+      hideResults();
+      return;
+    }
+    
+    const results = fuse.search(query);
+    console.log('Search results:', results.length);
+    displayResults(results);
+  }
+  
+  // Display search results
+  function displayResults(results) {
+    const resultsContainer = document.querySelector('.search-results');
+    const resultsList = document.querySelector('.search-list');
+    
+    if (results.length === 0) {
+      resultsList.innerHTML = '<li class="text-gray-500 dark:text-gray-400 text-center py-4">No se encontraron resultados</li>';
+    } else {
+      resultsList.innerHTML = results
+        .slice(0, 10)
+        .map(result => `
+          <li>
+            <a href="/blog/${result.item.slug}" class="block p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
+              <div class="font-semibold text-gray-900 dark:text-white">${result.item.title}</div>
+              <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">${result.item.description}</div>
+            </a>
+          </li>
+        `)
+        .join('');
+    }
+    
+    resultsContainer.classList.remove('hidden');
+  }
+  
+  // Hide search results
+  function hideResults() {
+    const resultsContainer = document.querySelector('.search-results');
+    resultsContainer.classList.add('hidden');
+  }
+  
+  // Event listeners
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing search...');
+    initSearch();
+    
+    // Search toggle
+    const openSearchBtn = document.querySelector('.open-search');
+    const closeSearchBtn = document.querySelector('.close-search');
+    
+    if (openSearchBtn) {
+      openSearchBtn.addEventListener('click', () => {
+        console.log('Search button clicked');
+        toggleSearch();
+      });
+    }
+    
+    if (closeSearchBtn) {
+      closeSearchBtn.addEventListener('click', () => {
+        console.log('Close search button clicked');
+        toggleSearch();
+      });
+    }
+    
+    // Search input
+    const searchInput = document.querySelector('.search-ui input');
+    if (searchInput) {
+      let searchTimeout;
+      
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          performSearch(e.target.value);
+        }, 300);
+      });
+    }
+    
+    // Close search on escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && searchVisible) {
+        toggleSearch();
+      }
+    });
+    
+    // Close search on outside click
+    const searchUI = document.querySelector('.search-ui');
+    if (searchUI) {
+      searchUI.addEventListener('click', (e) => {
+        if (e.target.classList.contains('search-ui')) {
+          toggleSearch();
+        }
+      });
+    }
+  });
+</script> 

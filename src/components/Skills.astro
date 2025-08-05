@@ -1,0 +1,51 @@
+---
+// Cargar todos los skills del directorio de contenido
+const skillFiles = await Astro.glob('../content/skills/*.md');
+
+// Transformar los skills a la estructura esperada
+const skills = await Promise.all(
+  skillFiles.map(async (skill) => {
+    try {
+      return {
+        slug: skill.frontmatter?.slug || 'unknown',
+        data: {
+          title: skill.frontmatter?.title || 'Sin título',
+          description: skill.frontmatter?.description || 'Sin descripción',
+          image: skill.frontmatter?.image || skill.frontmatter?.thumbnail || '/skills/javascript.png',
+          content: skill.compiledContent()
+        }
+      };
+    } catch (error) {
+      console.error(`Error processing skill: ${skill.file}`, error);
+      return null;
+    }
+  })
+);
+
+// Filtrar skills nulos
+const validSkills = skills.filter(Boolean);
+---
+
+<section class="bg-gray-50 dark:bg-gray-900 py-16">
+  <div class="container mx-auto px-6">
+    <h2 class="text-4xl font-bold text-center mb-12 text-gray-900 dark:text-white">Skills</h2>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8 max-w-6xl mx-auto">
+      {validSkills.map(skill => (
+        <a href={`/skills/${skill.slug}`} class="flex flex-col items-center text-center group cursor-pointer no-underline">
+          <div class="w-20 h-20 md:w-24 md:h-24 mb-4 rounded-lg shadow-sm bg-gray-800 dark:bg-gray-900 overflow-hidden transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg border border-gray-700 dark:border-gray-600">
+            <img 
+              src={skill.data.image} 
+              alt={skill.data.title}
+              class="rounded-lg shadow-sm w-full h-full object-cover transition-transform duration-300 group-hover:scale-125"
+              loading="lazy"
+            />
+          </div>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            {skill.data.title}
+          </h3>
+        </a>
+      ))}
+    </div>
+  </div>
+</section> 

@@ -1,21 +1,160 @@
 ---
-import { type CollectionEntry, getCollection } from 'astro:content';
-import BlogPost from '../../layouts/BlogPost.astro';
-import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
 
-export async function getStaticPaths() {
-	const posts = await getCollection('blog');
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: post,
-	}));
+// Cargar todos los posts del directorio de contenido
+const postFiles = await Astro.glob('../../content/blog/**/*.md');
+
+// Transformar los posts a la estructura esperada
+const posts = await Promise.all(
+  postFiles.map(async (post) => {
+    try {
+      // Extraer el slug de la ruta del archivo
+      const pathParts = post.file.split('/');
+      
+      let year, filename, slug;
+      
+      // Verificar si el archivo está en un subdirectorio por año o en el directorio raíz
+      if (pathParts.length >= 4 && /^\d{4}$/.test(pathParts[pathParts.length - 2])) {
+        // Archivo en subdirectorio por año (ej: src/content/blog/2019/post.md)
+        year = pathParts[pathParts.length - 2];
+        filename = pathParts[pathParts.length - 1].split('.')[0];
+        slug = `${year}-${filename}`;
+      } else {
+        // Archivo en el directorio raíz (ej: src/content/blog/post.md)
+        // Intentar extraer el año del frontmatter o usar un año por defecto
+        const pubDate = post.frontmatter?.pubDate ? new Date(post.frontmatter.pubDate) : new Date();
+        year = pubDate.getFullYear().toString();
+        filename = pathParts[pathParts.length - 1].split('.')[0];
+        slug = `${year}-${filename}`;
+      }
+      
+      return {
+        slug,
+        data: {
+          title: post.frontmatter?.title || 'Sin título',
+          description: post.frontmatter?.description || post.frontmatter?.summary || 'Sin descripción',
+          thumbnail: post.frontmatter?.thumbnail || post.frontmatter?.image || '/blog-placeholder-1.jpg',
+          pubDate: post.frontmatter?.pubDate ? new Date(post.frontmatter.pubDate) : new Date()
+        },
+        content: post.compiledContent()
+      };
+    } catch (error) {
+      console.error(`Error processing post: ${post.file}`, error);
+      return null;
+    }
+  })
+);
+
+// Filtrar posts nulos
+const validPosts = posts.filter(Boolean);
+
+// Obtener el slug del post de la URL
+const postSlug = Astro.params.slug;
+
+// Buscar el post correspondiente
+const post = validPosts.find(p => p.slug === postSlug);
+
+// Si no se encuentra el post, redirigir a 404
+if (!post) {
+  return Astro.redirect('/404');
 }
-type Props = CollectionEntry<'blog'>;
-
-const post = Astro.props;
-const { Content } = await render(post);
 ---
 
-<BlogPost {...post.data}>
-	<Content />
-</BlogPost>
+<BaseLayout 
+  title={post.data.title}
+  description={post.data.description}
+>
+  <div class="container mx-auto px-6 py-8">
+    <article class="max-w-4xl mx-auto font-sans">
+      <header class="mb-8">
+        <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white font-sans">{post.data.title}</h1>
+        <p class="text-lg text-gray-600 dark:text-gray-400 mb-4 font-sans">{post.data.description}</p>
+        <time class="text-sm text-gray-500 dark:text-gray-500 font-sans">
+          {post.data.pubDate.toLocaleDateString('es-ES', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </time>
+      </header>
+      
+      <div class="prose prose-lg dark:prose-invert max-w-none font-sans">
+        <Fragment set:html={post.content} />
+      </div>
+    </article>
+  </div>
+</BaseLayout>
+
+<style>
+  .markdown-content {
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  }
+  
+  .markdown-content h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  }
+  
+  .markdown-content h2 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  }
+  
+  .markdown-content h3 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  }
+  
+  .markdown-content p {
+    margin-bottom: 1rem;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  }
+  
+  .markdown-content ul {
+    margin-left: 2rem;
+    margin-bottom: 1rem;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  }
+  
+  .markdown-content li {
+    margin-bottom: 0.5rem;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  }
+  
+  .markdown-content code {
+    background-color: #f3f4f6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+  }
+  
+  .markdown-content pre {
+    background-color: #f3f4f6;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+  
+  .markdown-content pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+  
+  .dark .markdown-content code {
+    background-color: #374151;
+  }
+  
+  .dark .markdown-content pre {
+    background-color: #374151;
+  }
+</style>
